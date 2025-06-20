@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="word-guessing.css">
+    <title>Word Guessing Game</title>
+
+</head>
+<body>
+    <div class="container">
+        <h1>Wort-Ratespiel</h1>
+        <div class="hint-box">
+            💡 <span id="hint-text">Hier erscheint der Hinweis zum Wort.</span>
+        </div>
+        <div class="game-area">
+            <div class="word-display">
+                <div id="display-word"></div>
+            </div>
+            <div class="guess-area">
+                <input type="text" id="guess-input" maxlength="1" autocomplete="off" placeholder="Enter a letter">
+                <button id="guess-button">Guess!</button>
+            </div>
+            <div class="status">
+                <p>Verbleibende Versuche: <span id="attempts">6</span></p>
+                <p>Erratene Buchstaben:<span id="guessed-letters"></span></p>
+                
+            </div>
+            <div id="message"></div>
+        </div>
+        <button id="new-game" style="display: none;">New Game</button>
+    </div>
+    <script>
+        // Array of possible words for the game
+        const words = [
+            "javascript",
+            "python",
+            "java",
+            "react",
+            "angular",
+            "nodejs",
+            "typescript",
+            "database",
+            "algorithm",
+            "framework",
+            "github"
+        ];
+        const wordHints = {
+            "javascript": "Eine weit verbreitete Sprache für Webentwicklung – läuft im Browser.",
+            "python": "Beliebte Sprache für Einsteiger, oft in KI und Data Science genutzt.",
+            "java": "Wird oft in Android-Apps und Unternehmenssoftware verwendet.",
+            "react": "Ein JavaScript-Framework für UI-Entwicklung, von Facebook entwickelt.",
+            "angular": "Ein Webframework von Google für die Entwicklung komplexer Frontends.",
+            "nodejs": "Ermöglicht das Ausführen von JavaScript auf dem Server.",
+            "typescript": "Eine typsichere Erweiterung von JavaScript.",
+            "database": "Wird verwendet, um Daten strukturiert zu speichern und abzurufen.",
+            "algorithm": "Eine Schritt-für-Schritt-Anleitung zur Lösung eines Problems.",
+            "framework": "Ein Software-Rahmen, der die Entwicklung standardisiert und erleichtert.",
+            "github": "Plattform zur Versionskontrolle und Zusammenarbeit an Codeprojekten."
+        };
+
+        // Game state variables
+        let currentWord = '';
+        let attemptsLeft = 6;
+        let guessedLetters = new Set();
+
+        function showHint(word) {
+            const hintElement = document.getElementById("hint-text");
+            if (wordHints[word]) {
+                hintElement.textContent = wordHints[word];
+            } else {
+                hintElement.textContent = "Kein Hinweis verfügbar.";
+            }
+        }
+
+        // Function to start a new game
+        function startNewGame() {
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            attemptsLeft = 6;
+            guessedLetters.clear();
+
+            // Update UI elements
+            document.getElementById('display-word').textContent = '_ '.repeat(currentWord.length).trim();
+            document.getElementById('attempts').textContent = attemptsLeft;
+            document.getElementById('guessed-letters').textContent = '';
+            document.getElementById('message').textContent = '';
+            document.getElementById('message').className = '';
+            document.getElementById('guess-input').value = '';
+            document.getElementById('guess-input').disabled = false;
+            document.getElementById('guess-button').disabled = false;
+            document.getElementById('new-game').style.display = 'none';
+            showHint(currentWord);
+        }
+
+        // Function to update the word display with guessed letters
+        function updateDisplay() {
+            const displayWord = document.getElementById('display-word');
+            const guessedWord = currentWord
+                .split('')
+                .map(letter => guessedLetters.has(letter) ? letter : '_')
+                .join(' ');
+            displayWord.textContent = guessedWord;
+        }
+
+        // Function to check if player has won the game
+        function checkWin() {
+            const displayWord = document.getElementById('display-word').textContent.replace(/\s+/g, '');
+            if (displayWord === currentWord) {
+                showMessage('Congratulations! You won!', 'success');
+                document.getElementById('guess-button').disabled = true;
+                document.getElementById('guess-input').disabled = true;
+                document.getElementById('new-game').style.display = 'block';
+                return true;
+            }
+            return false;
+        }
+
+        // Function to check if player has lost the game
+        function checkLoss() {
+            if (attemptsLeft === 0) {
+                showMessage(`Game over! The word was: ${currentWord}`, 'failure');
+                document.getElementById('guess-button').disabled = true;
+                document.getElementById('guess-input').disabled = true;
+                document.getElementById('new-game').style.display = 'block';
+                return true;
+            }
+            return false;
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = type;
+        }
+
+        // Guess logic
+        function handleGuess() {
+            const input = document.getElementById('guess-input');
+            const guess = input.value.toLowerCase();
+
+            // Validate input: must be a single letter
+            if (guess.length !== 1 || !guess.match(/^[a-z]$/)) {
+                showMessage('Please enter a single letter!', 'failure');
+                input.value = '';
+                return;
+            }
+
+            // Check if letter has already been guessed
+            if (guessedLetters.has(guess)) {
+                showMessage('You already guessed that letter!', 'failure');
+                input.value = '';
+                return;
+            }
+
+            // Add guess to guessed letters
+            guessedLetters.add(guess);
+            document.getElementById('guessed-letters').textContent = Array.from(guessedLetters).join(', ');
+
+            // Handle incorrect or correct guess
+            if (!currentWord.includes(guess)) {
+                attemptsLeft--;
+                document.getElementById('attempts').textContent = attemptsLeft;
+                showMessage('Incorrect guess!', 'failure');
+            } else {
+                showMessage('Correct guess!', 'success');
+            }
+
+            updateDisplay();
+
+            if (!checkWin() && !checkLoss()) {
+                // Focus input for next guess
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        // Event listener for guess button
+        document.getElementById('guess-button').addEventListener('click', handleGuess);
+
+        // Allow pressing Enter to submit guess
+        document.getElementById('guess-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                handleGuess();
+            }
+        });
+
+        document.getElementById('new-game').addEventListener('click', startNewGame);
+
+        // Start the first game
+        startNewGame();
+    </script>
+</body>
+</html>

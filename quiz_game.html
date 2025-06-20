@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-translate-customization" content="YOUR_WIDGET_ID">
+    <link rel="stylesheet" href="quiz-game.css">
+    <title>Quiz Game</title>
+    
+    
+</head>
+
+<body>
+  
+          <div class="google">
+          <h1>Play in your language</h1>
+          <div id="google_translate_element"></div>
+        </div>
+        
+   
+        <div class="container">
+            <div class="screen active" id="start-screen">
+                <h1>Quiz Time!</h1>
+                <p>Test your knowledge with these fun questions</p>
+                <button id="start-btn">Start Quiz</button>
+                
+            </div>
+            
+            <div class="screen" id="quiz-screen">
+                <div class="quiz-header">
+                    <h2 id="question-text">Question goes here</h2>
+                    <div class="quiz-info">
+                        <p>Question <span id="current-question">1</span> of <span id="total-questions">5</span></p>
+                        <p>Score: <span id="score">0</span></p>
+                    </div>
+                </div>
+                <div id="answers-container" class="answers-container"></div>
+                <div class="progress-bar">
+                    <div id="progress" class="progress"></div>
+                </div>
+            </div>
+            <div id="result-screen" class="screen">
+                <h1>Quiz Results</h1>
+                <div class="result-info">
+                    <p>You scored <span id="final-score">0</span> out of <span id="max-score">5</span></p>
+                    <div id="result-message">Good job!</div>
+                </div>
+                <button id="restart-btn">Restart Quiz</button>
+            </div>
+        </div>
+      
+    
+    <script>
+        // DOM Elements
+const startScreen = document.getElementById("start-screen");
+const quizScreen = document.getElementById("quiz-screen");
+const resultScreen = document.getElementById("result-screen");
+const startButton = document.getElementById("start-btn");
+const questionText = document.getElementById("question-text");
+const answersContainer = document.getElementById("answers-container");
+const currentQuestionSpan = document.getElementById("current-question");
+const totalQuestionsSpan = document.getElementById("total-questions");
+const scoreSpan = document.getElementById("score");
+const finalScoreSpan = document.getElementById("final-score");
+const maxScoreSpan = document.getElementById("max-score");
+const resultMessage = document.getElementById("result-message");
+const restartButton = document.getElementById("restart-btn");
+const progressBar = document.getElementById("progress");
+
+let quizQuestions = []; // Will be initialized from fullQuestionBank
+let currentQuestionIndex = 0;
+let score = 0;
+
+// Full Question Bank
+const fullQuestionBank = [
+  {
+    question: "What is the capital of France?",
+    answers: [
+      { text: "London", correct: false },
+      { text: "Berlin", correct: false },
+      { text: "Paris", correct: true },
+      { text: "Madrid", correct: false },
+    ],
+  },
+  {
+    question: "Which planet is known as the Red Planet?",
+    answers: [
+      { text: "Venus", correct: false },
+      { text: "Mars", correct: true },
+      { text: "Jupiter", correct: false },
+      { text: "Saturn", correct: false },
+    ],
+  },
+  {
+    question: "What is the largest ocean on Earth?",
+    answers: [
+      { text: "Atlantic Ocean", correct: false },
+      { text: "Indian Ocean", correct: false },
+      { text: "Arctic Ocean", correct: false },
+      { text: "Pacific Ocean", correct: true },
+    ],
+  },
+  {
+    question: "Which of these is NOT a programming language?",
+    answers: [
+      { text: "Java", correct: false },
+      { text: "Python", correct: false },
+      { text: "Banana", correct: true },
+      { text: "JavaScript", correct: false },
+    ],
+  },
+  {
+    question: "What is the chemical symbol for gold?",
+    answers: [
+      { text: "Go", correct: false },
+      { text: "Gd", correct: false },
+      { text: "Au", correct: true },
+      { text: "Ag", correct: false },
+    ],
+  },
+  {
+    question: "What is the capital of Japan?",
+    answers: [
+      { text: "Beijing", correct: false },
+      { text: "Seoul", correct: false },
+      { text: "Tokyo", correct: true },
+      { text: "Bangkok", correct: false },
+    ],
+  },
+  {
+    question: "Mount Everest is located in which mountain range?",
+    answers: [
+      { text: "Andes", correct: false },
+      { text: "Rockies", correct: false },
+      { text: "Himalayas", correct: true },
+      { text: "Alps", correct: false },
+    ],
+  },
+  {
+    question: "What gas do plants absorb from the atmosphere?",
+    answers: [
+      { text: "Oxygen", correct: false },
+      { text: "Carbon Dioxide", correct: true },
+      { text: "Nitrogen", correct: false },
+      { text: "Hydrogen", correct: false },
+    ],
+  },
+  {
+    question: "Which part of the human body contains the smallest bones?",
+    answers: [
+      { text: "Fingers", correct: false },
+      { text: "Feet", correct: false },
+      { text: "Ears", correct: true },
+      { text: "Nose", correct: false },
+    ],
+  },
+  {
+    question: "Who is known as the father of computers?",
+    answers: [
+      { text: "Alan Turing", correct: false },
+      { text: "Charles Babbage", correct: true },
+      { text: "Tim Berners-Lee", correct: false },
+      { text: "Bill Gates", correct: false },
+    ],
+  },
+  {
+    question: "HTML stands for?",
+    answers: [
+      { text: "Hyper Trainer Marking Language", correct: false },
+      { text: "Hyper Text Markup Language", correct: true },
+      { text: "Hyper Text Markdown Language", correct: false },
+      { text: "None of the above", correct: false },
+    ],
+  },
+  {
+    question: "Who was the first President of the United States?",
+    answers: [
+      { text: "George Washington", correct: true },
+      { text: "Abraham Lincoln", correct: false },
+      { text: "Thomas Jefferson", correct: false },
+      { text: "John Adams", correct: false },
+    ],
+  },
+  {
+    question: "The Great Wall of China was primarily built to protect against which group?",
+    answers: [
+      { text: "Romans", correct: false },
+      { text: "Mongols", correct: true },
+      { text: "Huns", correct: false },
+      { text: "Vikings", correct: false },
+    ],
+  },
+  {
+    question: "Who wrote 'Romeo and Juliet'?",
+    answers: [
+      { text: "Mark Twain", correct: false },
+      { text: "William Shakespeare", correct: true },
+      { text: "Jane Austen", correct: false },
+      { text: "Charles Dickens", correct: false },
+    ],
+  },
+  {
+    question: "In which novel does the character 'Big Brother' appear?",
+    answers: [
+      { text: "Brave New World", correct: false },
+      { text: "Fahrenheit 451", correct: false },
+      { text: "1984", correct: true },
+      { text: "The Handmaid's Tale", correct: false },
+    ],
+  },
+];
+
+let answersDisabled = false;
+
+// Shuffle Function
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+// Start Quiz
+function startQuiz() {
+  const shuffled = [...fullQuestionBank];
+  shuffleArray(shuffled);
+  quizQuestions = shuffled.slice(0, 5);
+  currentQuestionIndex = 0;
+  score = 0;
+  scoreSpan.textContent = score;
+  totalQuestionsSpan.textContent = quizQuestions.length;
+  maxScoreSpan.textContent = quizQuestions.length;
+  showScreen(quizScreen);
+  showQuestion();
+}
+
+// Show a question
+function showQuestion() {
+  answersDisabled = false;
+  const currentQuestion = quizQuestions[currentQuestionIndex];
+  currentQuestionSpan.textContent = currentQuestionIndex + 1;
+  const progressPercent = (currentQuestionIndex / quizQuestions.length) * 100;
+  progressBar.style.width = progressPercent + "%";
+  questionText.textContent = currentQuestion.question;
+  answersContainer.innerHTML = "";
+  currentQuestion.answers.forEach((answer) => {
+    const button = document.createElement("button");
+    button.textContent = answer.text;
+    button.classList.add("answer-btn");
+    button.dataset.correct = answer.correct;
+    button.addEventListener("click", selectAnswer);
+    answersContainer.appendChild(button);
+  });
+}
+
+// Handle answer selection
+function selectAnswer(event) {
+  if (answersDisabled) return;
+  answersDisabled = true;
+
+  const selectedButton = event.target;
+  const isCorrect = selectedButton.dataset.correct === "true";
+
+  Array.from(answersContainer.children).forEach((button) => {
+    if (button.dataset.correct === "true") {
+      button.classList.add("correct");
+    } else if (button === selectedButton) {
+      button.classList.add("incorrect");
+    }
+  });
+
+  if (isCorrect) {
+    score++;
+    scoreSpan.textContent = score;
+  }
+
+  setTimeout(() => {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizQuestions.length) {
+      showQuestion();
+    } else {
+      showResult(); // CORRECTED: Was showResults()
+    }
+  }, 1000);
+}
+
+// Show result screen
+function showResult() {
+  showScreen(resultScreen);
+  finalScoreSpan.textContent = score;
+  maxScoreSpan.textContent = quizQuestions.length;
+  const percentage = (score / quizQuestions.length) * 100;
+  resultMessage.textContent =
+    score === quizQuestions.length
+      ? "Perfect score! 🎉"
+      : score >= quizQuestions.length / 2
+      ? "Good job!"
+      : "Better luck next time!";
+}
+
+// Show a screen (start, quiz, result)
+function showScreen(screen) {
+  startScreen.style.display = "none";
+  quizScreen.style.display = "none";
+  resultScreen.style.display = "none";
+  screen.style.display = "block";
+}
+
+// Restart quiz
+function restartQuiz() {
+  // Instead of starting immediately, go back to the start screen
+  showScreen(startScreen);
+}
+
+// Event listeners
+startButton.addEventListener("click", startQuiz);
+restartButton.addEventListener("click", restartQuiz);
+
+// Initially, show the start screen
+showScreen(startScreen);
+    </script>
+    <!-- Google Translate -->
+        <script type="text/javascript">
+    function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+        pageLanguage: 'en', // The default language of your site
+        // Add the language codes you want to support here
+        includedLanguages: 'en,de,ar',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+    }, 'google_translate_element');
+}
+    
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>
